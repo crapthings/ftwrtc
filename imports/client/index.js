@@ -32,5 +32,14 @@ FlowRouter.route('/channels/:_id/video/:messageId', {
     mount(Layout, {
       children: () => <Video _id={_id} messageId={messageId} />
     })
-  }
+  },
+
+  triggersExit: [function () {
+    if (global.peer) {
+      peer.stream.getTracks().forEach(track => track.stop())
+      peer.destroy()
+    }
+  }]
 })
+
+

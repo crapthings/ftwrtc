@@ -8,9 +8,16 @@ Meteor.methods({
     return Messages.insert(opts)
   },
 
-  'messages.signal'(_id, signal) {
+  'messages.accept'(_id, opts) {
+    Messages.update(_id, {
+      $set: opts
+    })
+    return Messages.findOne(_id).initiatorId
+  },
+
+  'messages.update'(_id, opts) {
     return Messages.update(_id, {
-      $set: { signals: { [`${this.userId}`]: { signal, ts: new Date() } } }
+      $set: opts
     })
   },
 

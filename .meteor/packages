@@ -20,5 +20,4 @@ kadira:flow-router
 react-meteor-data
 accounts-password
 aldeed:simple-schema
-meteor-slack:rtc
 random
