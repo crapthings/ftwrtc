@@ -13,9 +13,9 @@ export default class FlexRTC {
     this.SubscribeRecord()
   }
 
-  SubscribeEvent = () => this.connection.event.subscribe(`rtc-signal/${this.currentPeer}`, this.onPeer)
+  SubscribeEvent = () => this.connection.event.subscribe(`rtc-signal/${this.currentPeer}`, this.onSignal)
 
-  onPeer = ({ peer, signal }) => this.connections[peer] && this.connections[peer].processSignal(signal)
+  onSignal = ({ peer, signal }) => this.connections[peer] && this.connections[peer].processSignal(signal)
 
   SubscribeRecord = () => this.peers.subscribe(this.onPeers)
 
@@ -72,13 +72,13 @@ class Peer {
       options.stream = stream
 
     this._p2pConnection = new SimplePeer(options)
-    this._p2pConnection.on('signal', this._onOutgoingSignal)
-    this._p2pConnection.on('error', this._onError)
-    this._p2pConnection.on('connect', this._onConnect)
-    this._p2pConnection.on('close', this._onClose)
-    this._p2pConnection.on('data', this._onData)
-    this._p2pConnection.on('stream', this._onStream)
-    setTimeout(this._checkConnected, 2000)
+    this._p2pConnection.on('error', this.onError)
+    this._p2pConnection.on('connect', this.onConnect)
+    this._p2pConnection.on('signal', this.onSignal)
+    this._p2pConnection.on('data', this.onData)
+    this._p2pConnection.on('stream', this.onStream)
+    this._p2pConnection.on('close', this.onClose)
+    setTimeout(this._checkConnected, 5000)
   }
 
   getUserMedia = stream => this.connect({ stream })
@@ -89,19 +89,29 @@ class Peer {
 
   destroy = () => this._p2pConnection.destroy()
 
-  _onOutgoingSignal = signal => {
+  onError = error => console.log('on error', error)
+
+  onConnect = () => {
+    this._isConnected = true
+    console.log('on connect' + this.peer)
+  }
+
+  onSignal = signal => {
+    console.log(signal)
     this.connection.event.emit(`rtc-signal/${this.peer}`, {
       peer: this.currentPeer,
       signal,
     })
   }
 
-  _onConnect = () => {
-    this._isConnected = true
-    console.log('on connect' + this.peer)
+  onData = data => console.log('on data', data)
+
+  onStream = stream => {
+    this.video.srcObject = stream
+    this.video.play()
   }
 
-  _onClose = () => {
+  onClose = () => {
     console.log('on close', this.peer)
     delete this.connections[this.peer]
     this.peers.removeEntry(this.peer)
@@ -118,19 +128,5 @@ class Peer {
     if (!this._isConnected) {
       this.destroy()
     }
-  }
-
-  _onData = data => {
-    console.log('on data', data)
-  }
-
-  _onError = error => {
-    console.log('on error', error)
-  }
-
-  _onStream = stream => {
-    const video = document.getElementById(this.peer)
-    video.src = window.URL.createObjectURL(stream)
-    video.play()
   }
 }
