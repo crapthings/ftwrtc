@@ -1,5 +1,4 @@
-import io from 'socket.io-client'
-import Peer from 'simple-peer'
+import FlexRTC from '/imports/flexrtc'
 
 const tracker = ({ messageId }) => {
   const ready = Meteor.subscribe('messages.findOne', messageId).ready()
@@ -9,13 +8,21 @@ const tracker = ({ messageId }) => {
 }
 
 class component extends Component {
+  constructor() {
+    super()
+    this.flexrtc = new FlexRTC({
+      url: 'wss://switch1.fawuapp.com:6020',
+      iceServers: [{ urls: 'stun:39.107.42.211:19302' }],
+    })
+
+    console.log(this.flexrtc)
+  }
+
   render() {
     return (
-      <div>
-        <h1>video</h1>
-        <video id='local'></video>
-        <video id='remote'></video>
-      </div>
+      <>
+        <div id="video-wrapper"></div>
+      </>
     )
   }
 }

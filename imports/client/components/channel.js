@@ -1,4 +1,3 @@
-import io from 'socket.io-client'
 const Peer = require('simple-peer')
 
 const createMessage = channelId => evt => {
@@ -13,118 +12,20 @@ const createMessage = channelId => evt => {
 }
 
 const inviteVideoTalk = channelId => async () => {
-  // const initiatorId = await client.connect()
-  const socket = io('https://switch1.fawuapp.com', {
-    path: '/io',
+  const message = {
+    channelId,
+    _id: Random.id(),
+    type: 'video',
+    text: `start a video call`,
+  }
+
+  Meteor.call('messages.create', message, (err, resp) => {
+    FlowRouter.go(`/channels/${channelId}/video/${resp}`)
   })
-
-  socket.on('connect', function () {
-    const message = {
-      channelId,
-      _id: Random.id(),
-      type: 'video',
-      text: `start a video call`,
-    }
-
-    navigator.getUserMedia({ video: true, audio: true }, function (stream) {
-      global.peer = new Peer({
-        initiator: true,
-        channelName: message._id,
-        config: { iceServers: [{ urls: 'stun:39.107.42.211:19302' }] },
-        stream: stream,
-        trickle: false,
-      })
-
-      socket.on('answer', data => {
-        console.log('answer', data)
-        peer.signal(data)
-      })
-
-      peer.on('signal', function (data) {
-        console.log(data)
-        if (data.type === 'offer')
-          socket.emit('offer', message._id, data)
-        // console.log(data)
-      })
-
-      peer.on('connect', function () {
-      console.log('CONNECT')
-        peer.send('whatever' + Math.random())
-      })
-
-      peer.on('data', function (data) {
-        console.log('data: ' + data)
-      })
-
-
-      Meteor.call('messages.create', message, (err, resp) => {
-        FlowRouter.go(`/channels/${channelId}/video/${resp}`)
-      })
-
-      peer.on('stream', stream => {
-      // got remote video stream, now let's show it in a video tag
-        console.log(stream)
-        var video = document.querySelector('video')
-        video.src = window.URL.createObjectURL(stream)
-        video.play()
-      })
-
-    }, function () {})
-  })
-
 }
 
 const acceptVideoTalk = ({ channelId, _id }) => async () => {
   FlowRouter.go(`/channels/${channelId}/video/${_id}`)
-  const socket = io('https://switch1.fawuapp.com', {
-    path: '/io',
-  })
-
-  socket.on('connect', function () {
-    console.log('accept')
-
-    socket.emit('getOffer', _id)
-
-    socket.on('getOffer', data => {
-
-      navigator.getUserMedia({ video: true, audio: true }, function (stream) {
-        global.peer = new Peer({
-          initiator: false,
-          channelName: _id,
-          config: { iceServers: [{ urls: 'stun:39.107.42.211:19302' }] },
-          stream: stream,
-          trickle: false,
-        })
-
-        peer.signal(data)
-
-        peer.on('signal', function (data) {
-          console.log(data)
-          socket.emit('answer', data)
-        })
-
-        peer.on('connect', function () {
-      console.log('CONNECT')
-        peer.send('whatever' + Math.random())
-      })
-
-      peer.on('data', function (data) {
-        console.log('data: ' + data)
-      })
-
-
-
-        peer.on('stream', stream => {
-      // got remote video stream, now let's show it in a video tag
-        console.log(stream)
-        var video = document.querySelector('video')
-        video.src = window.URL.createObjectURL(stream)
-        video.play()
-      })
-
-      }, function () {})
-    })
-  })
 }
 
 const inviteUser = channelId => evt => {
