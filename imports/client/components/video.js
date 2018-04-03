@@ -12,16 +12,15 @@ class component extends Component {
     super()
     this.flexrtc = new FlexRTC({
       url: 'wss://switch1.fawuapp.com:6020',
-      iceServers: [{ urls: 'stun:39.107.42.211:19302' }],
+      // iceServers: _.map(stuns, stun => ({ urls: `stun:${stun}` })),
+      iceServers: [{ urls: 'stun:stun.aeta-audio.com:3478' }],
     })
-
-    console.log(this.flexrtc)
   }
 
   render() {
     return (
       <>
-        <div id="video-wrapper"></div>
+        <div id='video-wrapper'></div>
       </>
     )
   }
